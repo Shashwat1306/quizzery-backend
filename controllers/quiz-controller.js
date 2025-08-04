@@ -58,25 +58,45 @@ export const submitQuiz = async (req, res) => {
   try {
     const { quizId, answers } = req.body;
 
-    // 1. Find the quiz by ID
+    // 1. Fetch the quiz
     const quiz = await QuizModel.findById(quizId);
     if (!quiz) return res.status(404).json({ message: "Quiz not found" });
 
     let score = 0;
+    const review = [];
 
-    // 2. Compare submitted answers to correct ones
+    // 2. Evaluate each question
     quiz.questions.forEach((question) => {
       const userAnswer = answers[question._id];
-      if (userAnswer && userAnswer === question.correct) {
+      const correctAnswer = question.correct;
+
+      if (userAnswer && userAnswer === correctAnswer) {
         score += 1;
       }
+
+      review.push({
+        question: question.question,
+        correctAnswer,
+        userAnswer: userAnswer || null,
+        options: {
+          A: question.optionA,
+          B: question.optionB,
+          C: question.optionC,
+          D: question.optionD,
+        },
+      });
     });
 
-    // 3. Send back the score
-    res.json({ score, total: quiz.questions.length });
+    // 3. Return score and review
+    res.json({
+      score,
+      total: quiz.questions.length,
+      review,
+    });
 
   } catch (err) {
     console.error("Submit quiz error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
+
