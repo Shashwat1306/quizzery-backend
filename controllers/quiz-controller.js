@@ -18,31 +18,36 @@ export const QuizAdd = async (req, res) => {
   }
 };
 export const getQuizById = async (req, res) => {
-  try{
+  try {
     const { id } = req.params;
-    const quiz= await QuizModel.findById(id);
+    const quiz = await QuizModel.findById(id);
     if (!quiz) {
       return res.status(404).json({ message: "Quiz not found" });
     }
-    const sanitizedQuestions=quiz.questions.map((question) => {
-      const obj=question.toObject();
+
+    // remove the correct answers before sending to frontend
+    const sanitizedQuestions = quiz.questions.map((question) => {
+      const obj = question.toObject();
       delete obj.correct;
       return obj;
-    })
+    });
+
     const sanitizedQuiz = {
       _id: quiz._id,
       title: quiz.title,
+      duration: quiz.duration,   // ✅ include duration here
       questions: sanitizedQuestions,
       createdAt: quiz.createdAt,
       status: quiz.status,
     };
 
     res.json(sanitizedQuiz);
-  }catch (error) {
+  } catch (error) {
     console.error("Error in getQuizById:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
-}
+};
+
 export const getAllQuizzes = async (req, res) => {
   try {
     console.log("Inside getAllQuizzes"); 
